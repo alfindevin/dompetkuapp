@@ -11,6 +11,7 @@ export default function Home() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
+        // Jika belum login, paksa lempar ke /login
         router.push('/login');
       } else {
         setLoading(false);
@@ -19,22 +20,17 @@ export default function Home() {
   }, [router]);
 
   if (loading) {
-    return <div style={{ textAlign: 'center', marginTop: '50px' }}>Memeriksa sesi...</div>;
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
+        <p>Memeriksa sesi login...</p>
+      </div>
+    );
   }
 
   return (
     <div style={{ padding: '40px', fontFamily: 'sans-serif' }}>
       <h1>Selamat Datang di Dompetku!</h1>
-      <p>Anda berhasil masuk ke dalam aplikasi keuangan.</p>
-      <button 
-        onClick={async () => {
-          await supabase.auth.signOut();
-          router.push('/login');
-        }}
-        style={{ padding: '8px 16px', background: '#ff4d4f', color: '#fff', border: 'none', cursor: 'pointer', marginTop: '20px' }}
-      >
-        Keluar (Logout)
-      </button>
+      <p>Anda sudah berhasil masuk.</p>
     </div>
   );
 }
