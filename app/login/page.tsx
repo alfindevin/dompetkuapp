@@ -22,43 +22,58 @@ export default function LoginPage() {
     if (error) {
       alert('Gagal login: ' + error.message);
     } else {
-      router.push('/'); // Mengarahkan ke halaman utama setelah sukses login
+      router.push('/');
     }
     setLoading(false);
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '80px auto', padding: 20, fontFamily: 'sans-serif' }}>
-      <h2>Login Dompetku</h2>
-      <form onSubmit={handleLogin}>
-        <div style={{ marginBottom: 15 }}>
-          <label style={{ display: 'block', marginBottom: 5 }}>Email:</label>
-          <input 
-            type="email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            required 
-            style={{ width: '100%', padding: 8, boxSizing: 'border-box' }}
-          />
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+        
+        {/* Header Logo / Judul */}
+        <div className="text-center mb-8">
+          <span className="text-4xl">💰</span>
+          <h2 className="text-2xl font-bold text-slate-800 mt-2">Masuk ke DompetKu</h2>
+          <p className="text-sm text-slate-500 mt-1">Silakan masukkan akun keuangan Anda</p>
         </div>
-        <div style={{ marginBottom: 15 }}>
-          <label style={{ display: 'block', marginBottom: 5 }}>Password:</label>
-          <input 
-            type="password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            required 
-            style={{ width: '100%', padding: 8, boxSizing: 'border-box' }}
-          />
-        </div>
-        <button 
-          type="submit" 
-          disabled={loading} 
-          style={{ width: '100%', padding: '10px', background: '#0070f3', color: '#fff', border: 'none', cursor: 'pointer' }}
-        >
-          {loading ? 'Memproses...' : 'Masuk'}
-        </button>
-      </form>
+
+        {/* Form Login */}
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Email</label>
+            <input 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              required 
+              placeholder="nama@email.com"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-800"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Password</label>
+            <input 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+              placeholder="••••••••"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-800"
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition text-sm shadow-sm disabled:opacity-50 mt-2"
+          >
+            {loading ? 'Memproses...' : 'Masuk'}
+          </button>
+        </form>
+
+      </div>
     </div>
   );
 }
