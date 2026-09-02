@@ -9,10 +9,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Cek apakah user sudah login
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        // Jika belum login, arahkan ke halaman /login
         router.push('/login');
       } else {
         setLoading(false);
