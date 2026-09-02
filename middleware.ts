@@ -2,20 +2,17 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Ambil URL saat ini
-  const url = request.clone();
+  const { pathname } = request.nextUrl;
   
-  // Contoh pengecekan sederhana: 
-  // Jika Anda ingin mengarahkan halaman utama (/) langsung ke /login sementara waktu
-  if (url.pathname === '/') {
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+  // Jika mengakses halaman utama (/), arahkan ke /login sementara waktu
+  if (pathname === '/') {
+    const loginUrl = new URL('/login', request.url);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
 }
 
-// Tentukan halaman mana saja yang ingin dicegat oleh middleware
 export const config = {
-  matcher: ['/'], // Untuk saat ini, arahkan root (/) ke /login
+  matcher: ['/'],
 };
