@@ -1,18 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/utils/supabase/client' // Pastikan path ini sesuai dengan letak file client.ts Anda
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [isSignUp, setIsSignUp] = useState(false) // Mode: false = Login, true = Daftar
+  const [isSignUp, setIsSignUp] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,29 +20,20 @@ export default function LoginPage() {
     setErrorMsg('')
 
     if (isSignUp) {
-      // Proses Pendaftaran Akun Baru
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      })
-
+      const { error } = await supabase.auth.signUp({ email, password })
       if (error) {
         setErrorMsg(error.message)
       } else {
-        alert('Pendaftaran berhasil! Silakan periksa email Anda untuk konfirmasi (jika diaktifkan) atau langsung masuk.')
-        setIsSignUp(false) // Pindahkan kembali ke mode login
+        alert('Pendaftaran berhasil! Silakan masuk.')
+        setIsSignUp(false)
       }
     } else {
-      // Proses Masuk (Login)
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
         setErrorMsg(error.message)
       } else {
-        router.push('/') // Mengarahkan ke halaman utama setelah berhasil login
+        // Karena dashboard/halaman utamanya ada di dalam app (root), arahkan ke '/'
+        router.push('/') 
         router.refresh()
       }
     }
@@ -52,8 +43,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-        
-        {/* Header Judul Dinamis */}
         <div className="text-center mb-8">
           <span className="text-4xl">💰</span>
           <h2 className="text-2xl font-bold text-slate-800 mt-2">
@@ -64,14 +53,12 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Kotak Pesan Error jika ada */}
         {errorMsg && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
             {errorMsg}
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Email</label>
@@ -106,20 +93,15 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Tombol Pindah Mode (Login <-> Daftar) */}
         <div className="text-center mt-6">
           <button 
             type="button"
-            onClick={() => {
-              setIsSignUp(!isSignUp)
-              setErrorMsg('')
-            }}
+            onClick={() => { setIsSignUp(!isSignUp); setErrorMsg(''); }}
             className="text-xs text-blue-600 hover:underline font-medium"
           >
             {isSignUp ? 'Sudah punya akun? Masuk di sini' : 'Belum punya akun? Daftar mandiri di sini'}
           </button>
         </div>
-
       </div>
     </div>
   )
