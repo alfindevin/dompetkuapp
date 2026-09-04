@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '../supabaseClient'; // Sesuaikan path jika file supabaseClient.ts ada di root atau folder utils
+import { supabase } from './supabaseClient';  // ✅ file di folder yang sama
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
