@@ -1,16 +1,12 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { SUPABASE_CONFIG } from './config'
 
 export function createClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const url = SUPABASE_CONFIG.url
+  const key = SUPABASE_CONFIG.anonKey
 
   if (!url || !key) {
-    console.error(
-      '❌ ERROR: Supabase Environment Variables tidak ditemukan!\n' +
-      'Pastikan Anda telah menambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_ANON_KEY di Vercel Settings.'
-    );
-    // Melemparkan error yang lebih jelas agar tidak membingungkan
-    throw new Error('Missing Supabase Environment Variables');
+    throw new Error('Supabase Configuration missing!');
   }
 
   return createBrowserClient(url, key)
