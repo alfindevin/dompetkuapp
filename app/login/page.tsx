@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { createClient } from '@/utils/supabase/client' // Pastikan path ini sesuai dengan letak file client.ts Anda
+import { useState, useEffect } from 'react'
+import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
@@ -10,34 +10,46 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
-  
+
   const router = useRouter()
-  const supabase = createClient()
+  // Gunakan state untuk menyimpan client agar tidak crash saat build-time
+  const [supabase, setSupabase] = useState<any>(null)
+
+  useEffect(() => {
+    // Inisialisasi client HANYA di browser
+    setSupabase(createClient())
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!supabase) return // cegah submit jika client belum siap
+
     setLoading(true)
     setErrorMsg('')
 
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) {
-        setErrorMsg(error.message)
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({ email, password })
+        if (error) {
+          setErrorMsg(error.message)
+        } else {
+          alert('Pendaftaran berhasil! Silakan masuk.')
+          setIsSignUp(false)
+        }
       } else {
-        alert('Pendaftaran berhasil! Silakan masuk.')
-        setIsSignUp(false)
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) {
+          setErrorMsg(error.message)
+        } else {
+          router.push('/')
+          router.refresh()
+        }
       }
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) {
-        setErrorMsg(error.message)
-      } else {
-        // Karena dashboard/halaman utamanya ada di dalam app (root), arahkan ke '/'
-        router.push('/') 
-        router.refresh()
-      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Terjadi kesalahan')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
@@ -62,11 +74,11 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Email</label>
-            <input 
-              type="email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              required 
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
               placeholder="nama@email.com"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-800"
             />
@@ -74,19 +86,19 @@ export default function LoginPage() {
 
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Password</label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required 
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
               placeholder="••••••••"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-800"
             />
           </div>
 
-          <button 
-            type="submit" 
-            disabled={loading} 
+          <button
+            type="submit"
+            disabled={loading || !supabase}
             className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition text-sm shadow-sm disabled:opacity-50 mt-2"
           >
             {loading ? 'Memproses...' : (isSignUp ? 'Daftar Sekarang' : 'Masuk')}
@@ -94,7 +106,7 @@ export default function LoginPage() {
         </form>
 
         <div className="text-center mt-6">
-          <button 
+          <button
             type="button"
             onClick={() => { setIsSignUp(!isSignUp); setErrorMsg(''); }}
             className="text-xs text-blue-600 hover:underline font-medium"
