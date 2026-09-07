@@ -16,7 +16,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Kita buat response awal di sini
+  // Buat response sederhana
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -28,10 +28,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          // Update request cookies
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          // Update response cookies
-          response = NextResponse.next({ request })
+          // Hanya set cookie ke response, hindari pembuatan NextResponse baru di dalam sini
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           )
@@ -41,10 +38,8 @@ export async function middleware(request: NextRequest) {
   )
 
   try {
-    // Ambil user
+    // Cek session user
     const { data: { user } } = await supabase.auth.getUser()
-
-    // LOGIKA REDIRECT YANG LEBIH KETAT:
 
     // A. Jika tidak ada user dan mencoba akses halaman PROTECTED -> lempar ke /login
     if (!user && isProtectedRoute) {
@@ -55,10 +50,8 @@ export async function middleware(request: NextRequest) {
     if (user && isAuthPage) {
       return NextResponse.redirect(new URL('/', request.url))
     }
-
   } catch (error) {
     console.error('Auth Error:', error)
-    // Jika terjadi error auth, biarkan saja (NextResponse.next) agar tidak loop
   }
 
   return response
