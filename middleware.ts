@@ -4,11 +4,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // 1. Definisi Halaman
   const isAuthPage = pathname === '/login'
   const isProtectedRoute = pathname === '/' || pathname.startsWith('/dashboard')
 
-  // 2. Setup Supabase Client
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -16,9 +14,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Buat response sederhana
-  let response = NextResponse.next({ request })
-
+  // VERSI READ-ONLY: Kita tidak menggunakan setAll() untuk menghindari crash di Vercel
   const supabase = createServerClient(
     supabaseUrl,
     supabaseKey,
@@ -27,26 +23,21 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
-          // Hanya set cookie ke response, hindari pembuatan NextResponse baru di dalam sini
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
+        // Biarkan setAll kosong. Kita hanya perlu membaca session,
+        // refresh session bisa dilakukan di sisi Client/Page.
+        setAll() {},
       },
     }
   )
 
   try {
-    // Cek session user
+    // Hanya ambil data user untuk cek login
     const { data: { user } } = await supabase.auth.getUser()
 
-    // A. Jika tidak ada user dan mencoba akses halaman PROTECTED -> lempar ke /login
     if (!user && isProtectedRoute) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    // B. Jika ada user dan mencoba akses halaman LOGIN -> lempar ke / (home)
     if (user && isAuthPage) {
       return NextResponse.redirect(new URL('/', request.url))
     }
@@ -54,7 +45,7 @@ export async function middleware(request: NextRequest) {
     console.error('Auth Error:', error)
   }
 
-  return response
+  return NextResponse.next()
 }
 
 export const config = {
