@@ -60,15 +60,25 @@ export default function DashboardPage() {
 
   const totalBalance = totalIncome - totalExpense;
 
-  // 3. Fungsi Tambah Transaksi
+  // 3. Fungsi Tambah Transaksi (VERSI PERBAIKAN RLS)
   const handleAddTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !category) return;
 
     setIsSubmitting(true);
     try {
+      // --- TAMBAHKAN BAGIAN INI ---
+      // Ambil user yang sedang login untuk mendapatkan user_id
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        throw new Error('Anda harus login untuk menambah transaksi');
+      }
+      // ----------------------------
+
       const { error } = await supabase.from('transactions').insert([
         {
+          user_id: user.id, // <--- WAJIB: Kirim ID user agar lolos RLS
           amount: parseFloat(amount),
           category,
           type,
@@ -76,6 +86,22 @@ export default function DashboardPage() {
           date: new Date().toISOString().split('T')[0],
         },
       ]);
+
+      if (error) throw error;
+
+      // Reset Form
+      setAmount('');
+      setCategory('');
+      setDescription('');
+
+      // Refresh Data
+      await fetchTransactions();
+    } catch (error: any) {
+      alert('Gagal menambah transaksi: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
       if (error) throw error;
 
