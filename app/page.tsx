@@ -1,18 +1,35 @@
 'use client';
-export const dynamic = 'force-dynamic';
 
+import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
-  const supabase = createClient();
+  // Gunakan state untuk menyimpan client agar tidak diinisialisasi saat build-time
+  const [supabase, setSupabase] = useState<any>(null);
+
+  useEffect(() => {
+    // Inisialisasi client HANYA setelah komponen mount di browser
+    const client = createClient();
+    setSupabase(client);
+  }, []);
 
   const handleLogout = async () => {
+    if (!supabase) return;
     await supabase.auth.signOut();
     router.push('/login');
     router.refresh();
   };
+
+  // Tampilkan loading singkat sampai supabase client siap
+  if (!supabase) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-500 animate-pulse">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
