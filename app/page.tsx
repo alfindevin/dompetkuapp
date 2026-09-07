@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -20,26 +21,14 @@ export default function Home() {
           <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
             👋
           </div>
-          <h1 className="text-3xl font-bold text-slate-800">
-            Selamat Datang!
-          </h1>
-          <p className="text-slate-500 mt-2">
-            Anda berhasil masuk ke DompetKu. Kelola keuanganmu dengan lebih bijak hari ini.
-          </p>
+          <h1 className="text-3xl font-bold text-slate-800">Selamat Datang!</h1>
+          <p className="text-slate-500 mt-2">Anda berhasil masuk ke DompetKu. Kelola keuanganmu dengan lebih bijak hari ini.</p>
         </div>
-
         <div className="grid grid-cols-1 gap-3">
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="w-full py-3 px-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
-          >
+          <button onClick={() => router.push('/dashboard')} className="w-full py-3 px-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
             Buka Dashboard
           </button>
-
-          <button
-            onClick={handleLogout}
-            className="w-full py-3 px-4 bg-white text-red-500 border border-red-100 rounded-xl font-semibold hover:bg-red-50 transition-all"
-          >
+          <button onClick={handleLogout} className="w-full py-3 px-4 bg-white text-red-500 border border-red-100 rounded-xl font-semibold hover:bg-red-50 transition-all">
             Keluar (Logout)
           </button>
         </div>
