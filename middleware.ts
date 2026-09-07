@@ -1,43 +1,33 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { SUPABASE_CONFIG } from './utils/supabase/config' // Import config
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-
   const isAuthPage = pathname === '/login'
   const isProtectedRoute = pathname === '/' || pathname.startsWith('/dashboard')
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = SUPABASE_CONFIG.url
+  const supabaseKey = SUPABASE_CONFIG.anonKey
 
-  if (!supabaseUrl || !supabaseKey) {
-    return NextResponse.next()
-  }
+  let response = NextResponse.next({ request })
 
-  // VERSI READ-ONLY: Kita tidak menggunakan setAll() untuk menghindari crash di Vercel
   const supabase = createServerClient(
     supabaseUrl,
     supabaseKey,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        // Biarkan setAll kosong. Kita hanya perlu membaca session,
-        // refresh session bisa dilakukan di sisi Client/Page.
+        getAll() { return request.cookies.getAll() },
         setAll() {},
       },
     }
   )
 
   try {
-    // Hanya ambil data user untuk cek login
     const { data: { user } } = await supabase.auth.getUser()
-
     if (!user && isProtectedRoute) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
-
     if (user && isAuthPage) {
       return NextResponse.redirect(new URL('/', request.url))
     }
@@ -45,7 +35,7 @@ export async function middleware(request: NextRequest) {
     console.error('Auth Error:', error)
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {
