@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 
-// Tipe data untuk Transaksi
 interface Transaction {
   id: string;
   amount: number;
@@ -19,7 +18,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  // State untuk Form
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [type, setType] = useState<'income' | 'expense'>('expense');
@@ -28,7 +26,6 @@ export default function DashboardPage() {
 
   const supabase = createClient();
 
-  // 1. Fungsi Ambil Data
   const fetchTransactions = async () => {
     try {
       const { data, error } = await supabase
@@ -49,7 +46,6 @@ export default function DashboardPage() {
     fetchTransactions();
   }, []);
 
-  // 2. Logika Perhitungan Saldo
   const totalIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((acc, t) => acc + t.amount, 0);
@@ -60,25 +56,21 @@ export default function DashboardPage() {
 
   const totalBalance = totalIncome - totalExpense;
 
-  // 3. Fungsi Tambah Transaksi (VERSI PERBAIKAN RLS)
   const handleAddTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !category) return;
 
     setIsSubmitting(true);
     try {
-      // --- TAMBAHKAN BAGIAN INI ---
-      // Ambil user yang sedang login untuk mendapatkan user_id
       const { data: { user }, error: userError } = await supabase.auth.getUser();
 
       if (userError || !user) {
         throw new Error('Anda harus login untuk menambah transaksi');
       }
-      // ----------------------------
 
       const { error } = await supabase.from('transactions').insert([
         {
-          user_id: user.id, // <--- WAJIB: Kirim ID user agar lolos RLS
+          user_id: user.id,
           amount: parseFloat(amount),
           category,
           type,
@@ -89,28 +81,9 @@ export default function DashboardPage() {
 
       if (error) throw error;
 
-      // Reset Form
       setAmount('');
       setCategory('');
       setDescription('');
-
-      // Refresh Data
-      await fetchTransactions();
-    } catch (error: any) {
-      alert('Gagal menambah transaksi: ' + error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-      if (error) throw error;
-
-      // Reset Form
-      setAmount('');
-      setCategory('');
-      setDescription('');
-
-      // Refresh Data
       await fetchTransactions();
     } catch (error: any) {
       alert('Gagal menambah transaksi: ' + error.message);
@@ -137,7 +110,6 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* TOP CARDS: SUMMARY */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <p className="text-sm font-medium text-slate-500 uppercase">Total Saldo</p>
@@ -160,78 +132,44 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* FORM SECTION */}
           <div className="lg:col-span-1">
             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm sticky top-8">
               <h3 className="text-lg font-bold text-slate-800 mb-4">Tambah Transaksi</h3>
               <form onSubmit={handleAddTransaction} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Tipe</label>
-                  <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
-                    <button
-                      type="button"
-                      onClick={() => setType('income')}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md transition ${type === 'income' ? 'bg-white text-green-600 shadow-sm' : 'text-slate-500'}`}
-                    >
-                      Pemasukan
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setType('expense')}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md transition ${type === 'expense' ? 'bg-white text-red-600 shadow-sm' : 'text-slate-500'}`}
-                    >
-                      Pengeluaran
-                    </button>
-                  </div>
+                <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => setType('income')}
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition ${type === 'income' ? 'bg-white text-green-600 shadow-sm' : 'text-slate-500'}`}
+                  >
+                    Pemasukan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setType('expense')}
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition ${type === 'expense' ? 'bg-white text-red-600 shadow-sm' : 'text-slate-500'}`}
+                  >
+                    Pengeluaran
+                  </button>
                 </div>
-
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Jumlah (Rp)</label>
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="Contoh: 50000"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    required
-                  />
+                  <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none" required />
                 </div>
-
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Kategori</label>
-                  <input
-                    type="text"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    placeholder="Contoh: Gaji, Makanan, Listrik"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    required
-                  />
+                  <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none" required />
                 </div>
-
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Keterangan (Opsional)</label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Catatan tambahan..."
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    rows={3}
-                  />
+                  <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Keterangan</label>
+                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none" rows={3} />
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`w-full py-3 rounded-xl font-bold transition shadow-lg ${type === 'income' ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-200' : 'bg-red-600 hover:bg-red-700 text-white shadow-red-200'} disabled:opacity-50`}
-                >
+                <button type="submit" disabled={isSubmitting} className={`w-full py-3 rounded-xl font-bold transition shadow-lg ${type === 'income' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'} disabled:opacity-50`}>
                   {isSubmitting ? 'Menyimpan...' : 'Simpan Transaksi'}
                 </button>
               </form>
             </div>
           </div>
-
-          {/* HISTORY SECTION */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="p-6 border-b border-slate-100">
@@ -239,8 +177,8 @@ export default function DashboardPage() {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
+                  <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
+                    <tr>
                       <th className="px-6 py-3">Tanggal</th>
                       <th className="px-6 py-3">Kategori</th>
                       <th className="px-6 py-3">Keterangan</th>
@@ -249,20 +187,12 @@ export default function DashboardPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {transactions.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="px-6 py-10 text-center text-slate-400">
-                          Belum ada transaksi. Silakan tambah transaksi pertama Anda!
-                        </td>
-                      </tr>
+                      <tr><td colSpan={4} className="px-6 py-10 text-center text-slate-400">Belum ada transaksi.</td></tr>
                     ) : (
                       transactions.map((t) => (
                         <tr key={t.id} className="hover:bg-slate-50 transition">
                           <td className="px-6 py-4 text-sm text-slate-600">{t.date}</td>
-                          <td className="px-6 py-4">
-                            <span className="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                              {t.category}
-                            </span>
-                          </td>
+                          <td className="px-6 py-4"><span className="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 text-slate-600">{t.category}</span></td>
                           <td className="px-6 py-4 text-sm text-slate-500">{t.description || '-'}</td>
                           <td className={`px-6 py-4 text-sm font-bold text-right ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
                             {t.type === 'income' ? '+' : '-'} Rp {t.amount.toLocaleString('id-ID')}
