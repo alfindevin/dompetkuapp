@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+'use client'; // Tambahkan ini agar konsisten
 
 export default function DashboardPage() {
   return (
